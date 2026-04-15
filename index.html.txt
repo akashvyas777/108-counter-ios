@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>108 Counter</title>
+
+  <!-- Mobile -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#111111">
+
+  <!-- iPhone support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="108 Counter">
+  <link rel="apple-touch-icon" href="icon.png">
+
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #111;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      text-align: center;
+      user-select: none;
+    }
+
+    #counter {
+      font-size: 100px;
+      font-weight: bold;
+    }
+
+    #info {
+      margin-top: 20px;
+      font-size: 16px;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+
+<div>
+  <div id="counter">0</div>
+  <div id="info">Tap or press SPACE</div>
+</div>
+
+<script>
+  let count = 0;
+  const maxCount = 108;
+  const counterEl = document.getElementById("counter");
+
+  function playBell() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(528, now);
+
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(1056, now);
+
+    const osc3 = ctx.createOscillator();
+    const gain3 = ctx.createGain();
+    osc3.type = "triangle";
+    osc3.frequency.setValueAtTime(800, now);
+
+    osc1.connect(gain1).connect(ctx.destination);
+    osc2.connect(gain2).connect(ctx.destination);
+    osc3.connect(gain3).connect(ctx.destination);
+
+    gain1.gain.setValueAtTime(0.4, now);
+    gain1.gain.exponentialRampToValueAtTime(0.0001, now + 2);
+
+    gain2.gain.setValueAtTime(0.2, now);
+    gain2.gain.exponentialRampToValueAtTime(0.0001, now + 2);
+
+    gain3.gain.setValueAtTime(0.15, now);
+    gain3.gain.exponentialRampToValueAtTime(0.0001, now + 2);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc3.start(now);
+
+    osc1.stop(now + 2);
+    osc2.stop(now + 2);
+    osc3.stop(now + 2);
+  }
+
+  function incrementCounter() {
+    count++;
+    counterEl.textContent = count;
+
+    // vibration (Android only)
+    if (navigator.vibrate) {
+      navigator.vibrate(15);
+    }
+
+    if (count === maxCount) {
+      playBell();
+      setTimeout(() => {
+        count = 0;
+        counterEl.textContent = count;
+      }, 300);
+    }
+  }
+
+  // ✅ unified input (no double count)
+  document.addEventListener("pointerdown", function() {
+    incrementCounter();
+  });
+
+  // keyboard (no hold spam)
+  document.addEventListener("keydown", function(event) {
+    if (event.code === "Space" && !event.repeat) {
+      event.preventDefault();
+      incrementCounter();
+    }
+  });
+</script>
+
+</body>
+</html>
